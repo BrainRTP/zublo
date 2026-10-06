@@ -487,4 +487,42 @@ describe("CalendarMonthCard", () => {
       screen.getByText((_, element) => element?.textContent === "+500.00 $"),
     ).toBeInTheDocument();
   });
+
+  it("converts each entry into the main currency, not just its symbol", () => {
+    mocks.getLogoUrl.mockReturnValue(null);
+    mocks.toMain.mockImplementation((price: number, cur?: Currency) =>
+      cur && !cur.is_main ? price / cur.rate : price,
+    );
+    const rub = getCurrency({ id: "cur-rub", code: "RUB", symbol: "₽", rate: 1, is_main: true });
+    const usd = getCurrency({ id: "cur-usd", code: "USD", symbol: "$", rate: 0.0125, is_main: false });
+    const sub = getSubscription({ id: "sub-usd", name: "Claude", price: 100, currency: "cur-usd" });
+
+    render(
+      <CalendarMonthCard
+        month={4}
+        year={2026}
+        now={new Date(2026, 3, 15)}
+        daysInMonth={30}
+        isCurrentMonth={true}
+        loading={false}
+        statsCount={1}
+        selectedDay={null}
+        allCells={[{ day: 10, type: "current" }]}
+        entriesByDay={{ 10: [{ sub, date: new Date(2026, 3, 10) }] }}
+        mainCurrency={rub}
+        currencyById={new Map([["cur-rub", rub], ["cur-usd", usd]])}
+        paymentTracking={false}
+        paymentRecords={[]}
+        onPrev={vi.fn()}
+        onNext={vi.fn()}
+        onGoToday={vi.fn()}
+        onSelectDay={vi.fn()}
+      />,
+    );
+
+    // $100 at 80 RUB/USD: both the day badge and the entry row read 8000 RUB.
+    expect(screen.getAllByText("8000.00 ₽")).toHaveLength(2);
+    expect(screen.queryByText("100.00 ₽")).not.toBeInTheDocument();
+    mocks.toMain.mockImplementation((price: number) => price);
+  });
 });
