@@ -3,7 +3,10 @@ import { TrendingUp } from "lucide-react";
 import { useEffect,useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { FIXER_PROVIDER_LINKS } from "@/components/settings/exchange-rates/fixer.constants";
+import {
+  FIXER_PROVIDER_LINKS,
+  providerRequiresApiKey,
+} from "@/components/settings/exchange-rates/fixer.constants";
 import { FixerActions } from "@/components/settings/exchange-rates/FixerActions";
 import { FixerApiKeyField } from "@/components/settings/exchange-rates/FixerApiKeyField";
 import { FixerProviderSelect } from "@/components/settings/exchange-rates/FixerProviderSelect";
@@ -12,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "@/lib/toast";
 import { fixerService } from "@/services/fixer";
-import type { FixerSettings } from "@/types";
+import type { ExchangeRateProvider, FixerSettings } from "@/types";
 
 export function FixerTab() {
   const { t } = useTranslation();
@@ -21,7 +24,7 @@ export function FixerTab() {
 
   const [apiKey, setApiKey] = useState("");
   const [removeStoredApiKey, setRemoveStoredApiKey] = useState(false);
-  const [provider, setProvider] = useState<"fixer" | "apilayer">("fixer");
+  const [provider, setProvider] = useState<ExchangeRateProvider>("fixer");
 
   const { data: settings } = useQuery({
     queryKey: ["fixer_settings", user?.id ?? ""],
@@ -31,6 +34,7 @@ export function FixerTab() {
 
   // Derived state: is there a key saved on the server?
   const isKeySavedOnServer = settings?.api_key_configured ?? false;
+  const needsApiKey = providerRequiresApiKey(provider);
 
   useEffect(() => {
     if (settings) {
@@ -48,9 +52,16 @@ export function FixerTab() {
 
       const payload: Partial<FixerSettings> = {
         provider,
-        enabled: hasEffectiveApiKey,
+        enabled: needsApiKey ? hasEffectiveApiKey : true,
         user: user!.id,
       };
+
+      // A keyless provider leaves any stored key untouched for switching back.
+      if (!needsApiKey) {
+        return settings?.id
+          ? fixerService.updateSettings(settings.id, payload)
+          : fixerService.createSettings(payload);
+      }
 
       // API Key Logic:
       // 1. Explicitly requested removal
@@ -91,9 +102,15 @@ export function FixerTab() {
     onError: (err: Error) => toast.error(err.message || t("error")),
   });
 
-  const canSave = removeStoredApiKey || apiKey.trim().length > 0 || isKeySavedOnServer;
-  const canUpdateRates =
-    !removeStoredApiKey && (isKeySavedOnServer || apiKey.trim().length > 0);
+  const savedKeyless = !!settings && !providerRequiresApiKey(settings.provider || "fixer");
+  const canSave =
+    !needsApiKey || removeStoredApiKey || apiKey.trim().length > 0 || isKeySavedOnServer;
+  const canUpdateRates = needsApiKey
+    ? !removeStoredApiKey && (isKeySavedOnServer || apiKey.trim().length > 0)
+    : savedKeyless;
+  const ratesConfigured = needsApiKey
+    ? isKeySavedOnServer && !removeStoredApiKey
+    : savedKeyless;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -110,21 +127,35 @@ export function FixerTab() {
       <div className="space-y-6 ">
         <FixerProviderSelect provider={provider} onProviderChange={setProvider} />
 
-        <FixerApiKeyField
-          apiKey={apiKey}
-          apiKeyConfigured={isKeySavedOnServer}
-          provider={provider}
-          providerLink={FIXER_PROVIDER_LINKS[provider]}
-          removeStoredApiKey={removeStoredApiKey}
-          onApiKeyChange={(value) => {
-            setApiKey(value);
-            setRemoveStoredApiKey(false);
-          }}
-          onRemoveStoredApiKey={() => {
-            setApiKey("");
-            setRemoveStoredApiKey(true);
-          }}
-        />
+        {needsApiKey ? (
+          <FixerApiKeyField
+            apiKey={apiKey}
+            apiKeyConfigured={isKeySavedOnServer}
+            provider={provider}
+            providerLink={FIXER_PROVIDER_LINKS[provider]}
+            removeStoredApiKey={removeStoredApiKey}
+            onApiKeyChange={(value) => {
+              setApiKey(value);
+              setRemoveStoredApiKey(false);
+            }}
+            onRemoveStoredApiKey={() => {
+              setApiKey("");
+              setRemoveStoredApiKey(true);
+            }}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {t("exchangeapi_hint")}{" "}
+            <a
+              href={FIXER_PROVIDER_LINKS[provider]}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              GitHub
+            </a>
+          </p>
+        )}
 
         <FixerActions
           canSave={canSave}
@@ -135,7 +166,7 @@ export function FixerTab() {
           onUpdateRates={() => updateRatesMut.mutate()}
         />
 
-        {isKeySavedOnServer && !removeStoredApiKey && (
+        {ratesConfigured && (
           <p className="text-xs text-muted-foreground bg-muted/50 rounded-xl p-3">
             {t("fixer_configured_hint")}
           </p>

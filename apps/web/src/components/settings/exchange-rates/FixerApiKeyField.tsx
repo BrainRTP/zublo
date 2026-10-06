@@ -1,13 +1,15 @@
 import { ExternalLink, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+import { FIXER_PROVIDER_NAMES } from "@/components/settings/exchange-rates/fixer.constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import type { ExchangeRateProvider } from "@/types";
 
 interface FixerApiKeyFieldProps {
   apiKey: string;
   apiKeyConfigured: boolean;
-  provider: "fixer" | "apilayer";
+  provider: ExchangeRateProvider;
   providerLink: string;
   removeStoredApiKey: boolean;
   onApiKeyChange: (value: string) => void;
@@ -69,7 +71,7 @@ export function FixerApiKeyField({
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1"
       >
-        {t("get_free_api_key")} {provider === "fixer" ? "Fixer.io" : "APILayer"}
+        {t("get_free_api_key")} {FIXER_PROVIDER_NAMES[provider]}
         <ExternalLink className="w-3 h-3" />
       </a>
     </div>

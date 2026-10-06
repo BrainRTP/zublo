@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 
+import { FIXER_PROVIDER_NAMES } from "@/components/settings/exchange-rates/fixer.constants";
 import {
   Select,
   SelectContent,
@@ -7,10 +8,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { ExchangeRateProvider } from "@/types";
 
 interface FixerProviderSelectProps {
-  provider: "fixer" | "apilayer";
-  onProviderChange: (value: "fixer" | "apilayer") => void;
+  provider: ExchangeRateProvider;
+  onProviderChange: (value: ExchangeRateProvider) => void;
 }
 
 export function FixerProviderSelect({
@@ -27,8 +29,11 @@ export function FixerProviderSelect({
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="rounded-xl">
-          <SelectItem value="fixer">Fixer.io</SelectItem>
-          <SelectItem value="apilayer">APILayer</SelectItem>
+          {(Object.keys(FIXER_PROVIDER_NAMES) as ExchangeRateProvider[]).map((value) => (
+            <SelectItem key={value} value={value}>
+              {FIXER_PROVIDER_NAMES[value]}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

@@ -659,6 +659,7 @@
   "fixer_no_key_title": "Nenhuma chave de API de taxa de câmbio",
   "fixer_no_key_desc": "Para atualizar as taxas de câmbio, você precisa configurar uma chave API Fixer.io ou APILayer em Configurações.",
   "fixer_configured_hint": "As taxas de câmbio são atualizadas automaticamente duas vezes ao dia (meia-noite e meio-dia). Você também pode atualizá-las manualmente a qualquer momento.",
+  "exchangeapi_hint": "Gratuito, sem chave. As cotações de mais de 200 moedas são atualizadas diariamente.",
   "get_free_api_key": "Obtenha uma chave de API gratuita",
   "go_to_settings": "Vá para Configurações",
   "chat": "Bater papo",

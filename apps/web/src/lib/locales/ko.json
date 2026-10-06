@@ -225,6 +225,7 @@
   "fixer_no_key_title": "환율 API 키 없음",
   "fixer_no_key_desc": "환율을 업데이트하려면 설정에서 Fixer.io 또는 APILayer API 키를 구성해야 합니다.",
   "fixer_configured_hint": "환율은 하루 두 번(자정과 정오) 자동으로 업데이트됩니다. 언제든지 수동으로 업데이트할 수도 있습니다.",
+  "exchangeapi_hint": "무료이며 키가 필요 없습니다. 200개 이상 통화의 환율이 매일 업데이트됩니다.",
   "get_free_api_key": "무료 API 키 받기",
   "go_to_settings": "설정으로 이동",
   "update_exchange": "환율 업데이트",

@@ -225,6 +225,7 @@
   "fixer_no_key_title": "Döviz Kuru API Anahtarı Yok",
   "fixer_no_key_desc": "Döviz kurlarını güncellemek için Ayarlar'da bir Fixer.io veya APILayer API anahtarı yapılandırmanız gerekir.",
   "fixer_configured_hint": "Döviz kurları günde iki kez otomatik olarak güncellenir (gece yarısı ve öğlen). Ayrıca istediğiniz zaman manuel olarak güncelleyebilirsiniz.",
+  "exchangeapi_hint": "Ücretsiz, anahtar gerekmez. 200'den fazla para biriminin kurları her gün güncellenir.",
   "get_free_api_key": "Ücretsiz bir API anahtarı edinin",
   "go_to_settings": "Ayarlar'a gidin",
   "update_exchange": "Döviz kurlarını güncelle",

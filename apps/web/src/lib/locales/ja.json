@@ -225,6 +225,7 @@
   "fixer_no_key_title": "為替レート API キーなし",
   "fixer_no_key_desc": "為替レートを更新するには、設定で Fixer.io または APILayer API キーを構成する必要があります。",
   "fixer_configured_hint": "為替レートは1日2回（深夜と正午）自動的に更新されます。いつでも手動で更新することもできます。",
+  "exchangeapi_hint": "無料、キー不要。200以上の通貨のレートが毎日更新されます。",
   "get_free_api_key": "無料の API キーを取得する",
   "go_to_settings": "設定に移動",
   "update_exchange": "為替レートを更新",

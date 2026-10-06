@@ -225,6 +225,7 @@
   "fixer_no_key_title": "Ingen Exchange Rate API-nøgle",
   "fixer_no_key_desc": "For at opdatere valutakurser skal du konfigurere en Fixer.io eller APILayer API-nøgle i Indstillinger.",
   "fixer_configured_hint": "Valutakurser opdateres automatisk to gange om dagen (midnat og middag). Du kan også opdatere dem manuelt når som helst.",
+  "exchangeapi_hint": "Gratis, ingen nøgle nødvendig. Kurser for over 200 valutaer opdateres dagligt.",
   "get_free_api_key": "Få en gratis API-nøgle",
   "go_to_settings": "Gå til Indstillinger",
   "update_exchange": "Opdater valutakurser",

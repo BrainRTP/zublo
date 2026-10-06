@@ -125,15 +125,17 @@ routerAdd("POST", "/api/cron/{job}", function(e) {
   if (job === "update_exchange_rates") {
     // NOTE: api_key is a hidden field (migration 0017) — PocketBase silently drops hidden
     // fields from filter expressions. Fetch all fixer_settings and validate the key in JS.
+    var exchangeRates = require(__hooks + "/lib/pure/exchange-rates.js");
+    var exchangeProviders = require(__hooks + "/lib/exchange-providers.js");
     var fixers = $app.findRecordsByFilter("fixer_settings", "1=1", "", 0, 0);
     var updated = 0;
 
     for (var i = 0; i < fixers.length; i++) {
       var fixer = fixers[i];
       var apiKey = fixer.get("api_key");
-      // Skip records where no API key has been stored yet
-      if (!String(apiKey || "").trim()) continue;
       var provider = fixer.get("provider") || "fixer";
+      // Skip records where a key-based provider has no key stored yet
+      if (exchangeRates.providerRequiresApiKey(provider) && !String(apiKey || "").trim()) continue;
       var userId = fixer.get("user");
       try {
         // Use is_main flag as authoritative source — user.main_currency may be stale
@@ -141,38 +143,28 @@ routerAdd("POST", "/api/cron/{job}", function(e) {
         if (mainCurrencies.length === 0) continue;
         var mainCode = mainCurrencies[0].get("code");
 
-        // Free plans only support EUR as base — use HTTPS for Docker/proxy compatibility
-        var url = provider === "apilayer"
-          ? "https://api.apilayer.com/fixer/latest?base=EUR"
-          : "https://data.fixer.io/api/latest?access_key=" + apiKey;
-        var hdrs = provider === "apilayer" ? { apikey: apiKey } : {};
-        var res = $http.send({ url: url, method: "GET", headers: hdrs });
+        var curs = $app.findRecordsByFilter("currencies", "user = {:u}", "", 0, 0, { u: userId });
+        var codes = curs.map(function (cur) { return cur.get("code"); });
+        var fetched = exchangeProviders.fetchRates(provider, apiKey);
 
-        if (res.statusCode === 200 && res.json && res.json.rates) {
-          var eurRates = res.json.rates;
-          eurRates["EUR"] = 1;
-          var mainEurRate = eurRates[mainCode];
-          if (!mainEurRate) continue; // unknown main currency, skip
+        var normalized;
+        try {
+          normalized = exchangeRates.normalizeRatesByMainCurrency(fetched.rates, mainCode, codes, fetched.base);
+        } catch (_) { continue; } // unknown main currency, skip
 
-          var curs = $app.findRecordsByFilter("currencies", "user = {:u}", "", 0, 0, { u: userId });
-          for (var ci = 0; ci < curs.length; ci++) {
-            var code = curs[ci].get("code");
-            if (code === mainCode) {
-              curs[ci].set("rate", 1);
-              $app.save(curs[ci]);
-              updated++;
-            } else if (eurRates[code] !== undefined) {
-              curs[ci].set("rate", eurRates[code] / mainEurRate);
-              $app.save(curs[ci]);
-              updated++;
-            }
+        for (var ci = 0; ci < curs.length; ci++) {
+          var rate = normalized[curs[ci].get("code")];
+          if (rate !== undefined) {
+            curs[ci].set("rate", rate);
+            $app.save(curs[ci]);
+            updated++;
           }
-          try {
-            var logs = $app.findRecordsByFilter("exchange_log", "1=1", "", 1, 0);
-            if (logs.length > 0) { logs[0].set("last_update", new Date().toISOString()); $app.save(logs[0]); }
-            else { var lc = $app.findCollectionByNameOrId("exchange_log"); var lr = new Record(lc); lr.set("last_update", new Date().toISOString()); $app.save(lr); }
-          } catch(_) {}
         }
+        try {
+          var logs = $app.findRecordsByFilter("exchange_log", "1=1", "", 1, 0);
+          if (logs.length > 0) { logs[0].set("last_update", new Date().toISOString()); $app.save(logs[0]); }
+          else { var lc = $app.findCollectionByNameOrId("exchange_log"); var lr = new Record(lc); lr.set("last_update", new Date().toISOString()); $app.save(lr); }
+        } catch(_) {}
       } catch(err) { console.log("[Zublo] manual updateExchange error:", err); }
     }
 

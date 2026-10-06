@@ -225,6 +225,7 @@
   "fixer_no_key_title": "Nessuna chiave API del tasso di cambio",
   "fixer_no_key_desc": "Per aggiornare i tassi di cambio è necessario configurare una chiave API Fixer.io o APILayer in Impostazioni.",
   "fixer_configured_hint": "I tassi di cambio vengono aggiornati automaticamente due volte al giorno (mezzanotte e mezzogiorno). Puoi anche aggiornarli manualmente in qualsiasi momento.",
+  "exchangeapi_hint": "Gratuito, nessuna chiave richiesta. I tassi di oltre 200 valute vengono aggiornati ogni giorno.",
   "get_free_api_key": "Ottieni una chiave API gratuita",
   "go_to_settings": "Vai su Impostazioni",
   "update_exchange": "Aggiorna tassi di cambio",

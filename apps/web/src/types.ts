@@ -228,13 +228,15 @@ export interface NotificationsConfig {
   serverchan_send_key?: string;
 }
 
+export type ExchangeRateProvider = "fixer" | "apilayer" | "exchangeapi";
+
 export interface FixerSettings {
   id: string;
   user: string;
   enabled: boolean;
   api_key?: string;
   api_key_configured?: boolean;
-  provider: "fixer" | "apilayer";
+  provider: ExchangeRateProvider;
   base_currency?: string;
 }
 

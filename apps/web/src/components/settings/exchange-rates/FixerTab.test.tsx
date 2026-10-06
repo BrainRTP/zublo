@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 
+import type * as FixerConstants from "@/components/settings/exchange-rates/fixer.constants";
+
 import { FixerTab } from "./FixerTab";
 
 vi.mock("react-i18next", () => ({
@@ -78,8 +80,13 @@ vi.mock("@/lib/toast", () => ({
   toast: { success: mockToastSuccess, error: mockToastError },
 }));
 
-vi.mock("@/components/settings/exchange-rates/fixer.constants", () => ({
-  FIXER_PROVIDER_LINKS: { fixer: "https://fixer.io", apilayer: "https://apilayer.com" },
+vi.mock("@/components/settings/exchange-rates/fixer.constants", async (importOriginal) => ({
+  ...(await importOriginal<typeof FixerConstants>()),
+  FIXER_PROVIDER_LINKS: {
+    fixer: "https://fixer.io",
+    apilayer: "https://apilayer.com",
+    exchangeapi: "https://github.com/fawazahmed0/exchange-api",
+  },
 }));
 
 describe("FixerTab", () => {
@@ -400,5 +407,45 @@ describe("FixerTab", () => {
     settingsData = { id: "f1", api_key_configured: false }; // no provider field
     render(<FixerTab />);
     expect(screen.getByText("fixer_api")).toBeInTheDocument();
+  });
+
+  describe("keyless exchange-api provider", () => {
+    it("replaces the key field with a hint and enables both actions", () => {
+      settingsData = { id: "f1", api_key_configured: false, provider: "exchangeapi" };
+      render(<FixerTab />);
+      expect(screen.queryByText("fixer_api_key")).not.toBeInTheDocument();
+      expect(screen.getByText("exchangeapi_hint")).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "GitHub" })).toHaveAttribute(
+        "href",
+        "https://github.com/fawazahmed0/exchange-api",
+      );
+      expect(screen.getByText("save").closest("button")).not.toBeDisabled();
+      expect(screen.getByText("update_exchange").closest("button")).not.toBeDisabled();
+      expect(screen.getByText("fixer_configured_hint")).toBeInTheDocument();
+    });
+
+    it("saves as enabled without touching a stored key", async () => {
+      const { fixerService } = await import("@/services/fixer");
+      settingsData = { id: "f1", api_key_configured: true, provider: "exchangeapi" };
+      render(<FixerTab />);
+      await latestSaveOpts().mutationFn?.();
+      expect(vi.mocked(fixerService.updateSettings)).toHaveBeenCalledWith("f1", {
+        provider: "exchangeapi",
+        enabled: true,
+        user: "u1",
+      });
+    });
+
+    it("creates settings when none have an id yet", async () => {
+      const { fixerService } = await import("@/services/fixer");
+      settingsData = { api_key_configured: false, provider: "exchangeapi" };
+      render(<FixerTab />);
+      await latestSaveOpts().mutationFn?.();
+      expect(vi.mocked(fixerService.createSettings)).toHaveBeenCalledWith({
+        provider: "exchangeapi",
+        enabled: true,
+        user: "u1",
+      });
+    });
   });
 });

@@ -414,6 +414,16 @@ describe("CurrenciesTab", () => {
     expect(mockFixerUpdateRates).not.toHaveBeenCalled();
   });
 
+  it("setMainCurrency calls fixerService.updateRates for the keyless exchange-api provider", async () => {
+    fixerQueryData = { data: { api_key_configured: false, provider: "exchangeapi" } };
+    render(<CurrenciesTab />);
+    const buttons = screen.getAllByRole("button");
+    await act(async () => {
+      fireEvent.click(buttons[1]); // star button
+    });
+    expect(mockFixerUpdateRates).toHaveBeenCalled();
+  });
+
   it("setMainCurrency does NOT call fixerService.updateRates when fixerSettings is undefined", async () => {
     fixerQueryData = { data: undefined };
     render(<CurrenciesTab />);

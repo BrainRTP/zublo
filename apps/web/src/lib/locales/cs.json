@@ -225,6 +225,7 @@
   "fixer_no_key_title": "Žádný klíč API pro směnný kurz",
   "fixer_no_key_desc": "Chcete-li aktualizovat směnné kurzy, musíte v Nastavení nakonfigurovat klíč API Fixer.io nebo APILayer.",
   "fixer_configured_hint": "Směnné kurzy jsou automaticky aktualizovány dvakrát denně (půlnoc a poledne). Můžete je také kdykoli aktualizovat ručně.",
+  "exchangeapi_hint": "Zdarma, bez klíče. Kurzy více než 200 měn se aktualizují denně.",
   "get_free_api_key": "Získejte bezplatný klíč API",
   "go_to_settings": "Přejděte do Nastavení",
   "update_exchange": "Aktualizovat směnné kurzy",

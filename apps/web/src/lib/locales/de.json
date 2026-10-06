@@ -227,6 +227,7 @@
   "fixer_no_key_title": "Kein Wechselkurs-API-Schlüssel",
   "fixer_no_key_desc": "Um Wechselkurse zu aktualisieren, müssen Sie in den Einstellungen einen API-Schlüssel von Fixer.io oder APILayer konfigurieren.",
   "fixer_configured_hint": "Wechselkurse werden automatisch zweimal täglich (Mitternacht und Mittag) aktualisiert. Sie können sie auch jederzeit manuell aktualisieren.",
+  "exchangeapi_hint": "Kostenlos, kein Schlüssel nötig. Kurse für über 200 Währungen werden täglich aktualisiert.",
   "get_free_api_key": "Holen Sie sich einen kostenlosen API-Schlüssel",
   "go_to_settings": "Gehen Sie zu Einstellungen",
   "update_exchange": "Wechselkurse aktualisieren",

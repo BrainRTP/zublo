@@ -1,6 +1,11 @@
-function normalizeRatesByMainCurrency(eurRates, mainCode, currencyCodes) {
-  const rates = Object.assign({}, eurRates || {});
-  rates.EUR = 1;
+/**
+ * Rates map convention used across Zublo: rates[X] is "how many units of X
+ * per 1 unit of the base currency". Fixer/APILayer free plans and
+ * exchange-api all answer in EUR; the base is passed explicitly anyway.
+ */
+function normalizeRatesByMainCurrency(baseRates, mainCode, currencyCodes, baseCode) {
+  const rates = Object.assign({}, baseRates || {});
+  rates[baseCode || "EUR"] = 1;
 
   const mainRate = rates[mainCode];
   if (!mainRate) {
@@ -20,6 +25,25 @@ function normalizeRatesByMainCurrency(eurRates, mainCode, currencyCodes) {
   return normalized;
 }
 
+// exchange-api (fawazahmed0) is free and needs no key.
+function providerRequiresApiKey(provider) {
+  return provider !== "exchangeapi";
+}
+
+// exchange-api uses lowercase codes and mixes in crypto tokens; keep only
+// positive numeric rates under ISO-style uppercase codes.
+function upperCaseRates(rates) {
+  const result = {};
+  const source = rates || {};
+  Object.keys(source).forEach(function (code) {
+    const value = source[code];
+    if (typeof value === "number" && value > 0) result[code.toUpperCase()] = value;
+  });
+  return result;
+}
+
 module.exports = {
   normalizeRatesByMainCurrency,
+  providerRequiresApiKey,
+  upperCaseRates,
 };

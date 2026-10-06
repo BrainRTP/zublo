@@ -225,6 +225,7 @@
   "fixer_no_key_title": "Geen API-sleutel voor wisselkoers",
   "fixer_no_key_desc": "Om wisselkoersen bij te werken, moet u een Fixer.io of APILayer API-sleutel configureren in Instellingen.",
   "fixer_configured_hint": "Wisselkoersen worden automatisch twee keer per dag bijgewerkt (middernacht en middag). U kunt ze ook op elk moment handmatig bijwerken.",
+  "exchangeapi_hint": "Gratis, geen sleutel nodig. Koersen voor meer dan 200 valuta's worden dagelijks bijgewerkt.",
   "get_free_api_key": "Ontvang een gratis API-sleutel",
   "go_to_settings": "Ga naar Instellingen",
   "update_exchange": "Wisselkoersen bijwerken",

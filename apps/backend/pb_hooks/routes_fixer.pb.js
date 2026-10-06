@@ -4,11 +4,11 @@
 // ROUTE: Update exchange rates for the authenticated user
 // POST /api/fixer/update
 //
-// Both Fixer.io and APILayer free plans only return EUR as the base.
-// We always fetch with EUR as base, then normalize the rates to the
-// user's main currency so existing conversion formulas keep working:
+// Providers answer in EUR (Fixer.io and APILayer free plans, exchange-api).
+// The rates are normalized to the user's main currency so existing
+// conversion formulas keep working:
 //
-//   stored_rate[X] = eur_rates[X] / eur_rates[mainCode]
+//   stored_rate[X] = base_rates[X] / base_rates[mainCode]
 //
 // This means: "how many units of X per 1 unit of main currency".
 // Conversion in UI: price_in_main = price_in_X / stored_rate[X]
@@ -19,6 +19,7 @@
 // ================================================================
 routerAdd("POST", "/api/fixer/update", (e) => {
   const exchangeRates = require(__hooks + "/lib/pure/exchange-rates.js");
+  const exchangeProviders = require(__hooks + "/lib/exchange-providers.js");
   if (!e.auth) throw new ForbiddenError("Authentication required");
   const userId = e.auth.id;
 
@@ -28,12 +29,12 @@ routerAdd("POST", "/api/fixer/update", (e) => {
   const fixerCandidates = $app.findRecordsByFilter(
     "fixer_settings", "user = {:u}", "", 1, 0, { u: userId }
   );
-  if (fixerCandidates.length === 0 || !String(fixerCandidates[0].get("api_key") || "").trim()) {
+  const fixer = fixerCandidates[0];
+  const apiKey = fixer ? fixer.get("api_key") : "";
+  const provider = (fixer && fixer.get("provider")) || "fixer";
+  if (!fixer || (exchangeRates.providerRequiresApiKey(provider) && !String(apiKey || "").trim())) {
     return e.json(400, { error: "No exchange rate API key configured." });
   }
-  const fixer = fixerCandidates[0];
-  const apiKey = fixer.get("api_key");
-  const provider = fixer.get("provider") || "fixer";
 
   // Resolve the user's main currency code via is_main flag (authoritative)
   const mainCurrencies = $app.findRecordsByFilter("currencies", "user = {:u} && is_main = true", "", 1, 0, { u: userId });
@@ -42,44 +43,23 @@ routerAdd("POST", "/api/fixer/update", (e) => {
   }
   const mainCode = mainCurrencies[0].get("code");
 
-  // Fetch EUR-based rates. Both HTTP and HTTPS work — use HTTPS for compatibility
-  // with restricted environments (Docker, corporate proxies, etc.)
-  let url, headers;
-  if (provider === "apilayer") {
-    url = "https://api.apilayer.com/fixer/latest?base=EUR";
-    headers = { apikey: apiKey };
-  } else {
-    url = "https://data.fixer.io/api/latest?access_key=" + apiKey;
-    headers = {};
-  }
-
-  const res = $http.send({ url: url, method: "GET", headers: headers });
-
-  // Fixer returns HTTP 200 even for errors — check JSON body first
-  if (res.json && res.json.success === false) {
-    const msg = (res.json.error && res.json.error.info)
-      ? res.json.error.info
-      : ("Fixer error code " + (res.json.error && res.json.error.code));
-    return e.json(502, { error: msg });
-  }
-
-  if (res.statusCode !== 200 || !res.json || !res.json.rates) {
-    return e.json(502, {
-      error: "Exchange rate API failed (HTTP " + res.statusCode + ")",
-      detail: res.raw ? res.raw.slice(0, 300) : null,
-    });
-  }
-
-  // EUR-based rates from the API (e.g. { USD: 1.08, BRL: 5.4, EUR: 1.0 })
-  const eurRates = res.json.rates;
   const currencies = $app.findRecordsByFilter("currencies", "user = {:u}", "", 0, 0, { u: userId });
+  const currencyCodes = currencies.map(function (record) { return record.get("code"); });
+
+  let fetched;
+  try {
+    fetched = exchangeProviders.fetchRates(provider, apiKey);
+  } catch (err) {
+    return e.json(502, { error: err.message });
+  }
 
   let normalizedRates;
   try {
     normalizedRates = exchangeRates.normalizeRatesByMainCurrency(
-      eurRates,
+      fetched.rates,
       mainCode,
-      currencies.map(function (record) { return record.get("code"); })
+      currencyCodes,
+      fetched.base
     );
   } catch (_) {
     return e.json(400, {

@@ -11,7 +11,7 @@ interface FixerSettingsRecord {
   api_key_configured?: boolean;
   enabled: boolean;
   id: string;
-  provider: "fixer" | "apilayer";
+  provider: "fixer" | "apilayer" | "exchangeapi";
   user: string;
 }
 
@@ -98,6 +98,25 @@ describe
       const cleared = clearResult.json as FixerSettingsRecord;
       expect(cleared.api_key).toBeUndefined();
       expect(cleared.api_key_configured).toBe(false);
+    });
+
+    it("accepts the keyless exchange-api provider without a key", async () => {
+      const result = await harness.jsonRequest<
+        FixerSettingsRecord | PocketBaseErrorResponse
+      >("/api/collections/fixer_settings/records", {
+        body: {
+          enabled: true,
+          provider: "exchangeapi",
+          user: harness.admin!.record.id,
+        },
+        method: "POST",
+        token: harness.admin!.token,
+      });
+
+      expect(result.response.status, JSON.stringify(result.json)).toBe(200);
+      const created = result.json as FixerSettingsRecord;
+      expect(created.provider).toBe("exchangeapi");
+      expect(created.api_key_configured).toBe(false);
     });
 
     it("blocks a user from creating a fixer_settings record owned by someone else", async () => {

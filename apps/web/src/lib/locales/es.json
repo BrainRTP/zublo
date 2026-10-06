@@ -225,6 +225,7 @@
   "fixer_no_key_title": "Sin clave API de tipo de cambio",
   "fixer_no_key_desc": "Para actualizar los tipos de cambio, debe configurar una clave API Fixer.io o APILayer en Configuración.",
   "fixer_configured_hint": "Los tipos de cambio se actualizan automáticamente dos veces al día (medianoche y mediodía). También puedes actualizarlos manualmente en cualquier momento.",
+  "exchangeapi_hint": "Gratis, sin clave. Las tasas de más de 200 monedas se actualizan a diario.",
   "get_free_api_key": "Obtenga una clave API gratuita",
   "go_to_settings": "Ir a configuración",
   "update_exchange": "Actualizar tipos de cambio",
